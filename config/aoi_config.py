@@ -65,6 +65,11 @@ SATELLITE_INFO = {
     "sentinel2_revisit_days": 5,
 }
 
+# ── GEE project ───────────────────────────────────────────────────────────────
+# Set GEE_PROJECT env var to your Cloud project ID, or edit the fallback below.
+# Example:  set GEE_PROJECT=your-gee-project-id
+GEE_PROJECT_ID = os.environ.get("GEE_PROJECT", "your-gee-project-id")
+
 # ── GEE collection IDs ────────────────────────────────────────────────────────
 GEE_COLLECTIONS = {
     "sentinel1": "COPERNICUS/S1_GRD",

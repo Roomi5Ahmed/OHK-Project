@@ -61,7 +61,7 @@ Single source of truth in `config/aoi_config.py`:
 
 ### 2.2 Training Data
 
-- **Sen1Floods11**: 446 hand-labeled Sentinel-1 chips (512×512)
+- **Sen1Floods11**: 431 hand-labeled Sentinel-1 chips (512×512)
 - **Split**: 252 training, 89 validation, test set
 - **Labels**: Binary water masks (0 = no water, 1 = water, -1 = no data)
 - **Source**: Google Cloud Storage bucket `gs://sen1floods11/`
@@ -107,7 +107,7 @@ Risk = w_water × WaterSignal + w_terrain × TerrainRisk + w_rain × RainfallBia
 **Architecture**: U-Net with ResNet18 encoder (pretrained on ImageNet)
 
 **Training**:
-- Dataset: Sen1Floods11 (446 chips, 252 training / 89 validation)
+- Dataset: Sen1Floods11 (431 chips, 252 training / 89 validation)
 - India-prioritized sampling: 40 India chips oversampled 3x (120 effectively) = 332 effective training samples per epoch
 - Loss: FocalLoss (α=0.25, γ=2.0) + CrossEntropyLoss (weight=[1.0, 8.0])
 - Optimizer: AdamW (lr=5e-4, weight_decay=1e-4)
@@ -179,17 +179,16 @@ The threshold model, grounded in a peer-reviewed benchmark, is our primary valid
 
 | Epoch | Train Loss | Train IoU | Val Loss | Val IoU | Val Acc |
 |-------|-----------|-----------|----------|---------|---------|
-| 1 | 0.3317 | 0.3071 | 0.2678 | 0.3083 | 76.2% |
-| 10 | 0.2081 | 0.3817 | 0.1622 | 0.4956 | 91.9% |
-| 11 | 0.1834 | 0.4075 | 0.1627 | **0.5583** | **95.5%** |
-| 20 | 0.1651 | 0.4740 | 0.1355 | 0.4641 | 90.9% |
+| 1 | 0.2861 | 0.3038 | 0.1684 | 0.4287 | 88.8% |
+| 5 | 0.2174 | 0.3780 | 0.1689 | 0.5243 | 93.0% |
+| 10 | 0.1850 | 0.4062 | 0.1657 | **0.5395** | 93.1% |
+| 15 | 0.1994 | 0.4125 | 0.1525 | 0.5068 | 92.1% |
+| 20 | 0.1718 | 0.4217 | 0.1334 | 0.4408 | 90.7% |
 | 30 | 0.1702 | 0.4266 | 0.1403 | 0.4626 | 91.9% |
 
-**Best model**: Epoch 11, val IoU = 0.5583, val accuracy = 95.5%
+**Best model**: Epoch 10, val IoU = 0.5395, val accuracy = 93.1%
 
 **Training details**: 40 India chips oversampled 3x (120 effectively), 212 other chips = 332 effective training samples per epoch. FocalLoss + CrossEntropy, AdamW optimizer, CosineAnnealing scheduler.
-
-**Best model**: Epoch 11, val IoU = 0.5583, val accuracy = 95.5%
 
 ### 4.5 Validation Chart
 
@@ -239,7 +238,7 @@ The validation chart (`output/validation_charts/validation_flood_water.png`) sho
 
 | File | Size | Description |
 |------|------|-------------|
-| `flood_unet_best.pt` | 54.8 MB | Best checkpoint (val IoU = 0.5583) |
+| `flood_unet_best.pt` | 54.8 MB | Best checkpoint (val IoU = 0.5395) |
 | `flood_unet_final.pt` | 54.8 MB | Final model after 30 epochs |
 | `training_history.json` | 7.6 KB | Epoch-by-epoch metrics |
 

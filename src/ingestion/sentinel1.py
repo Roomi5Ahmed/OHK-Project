@@ -4,10 +4,8 @@ import ee
 import os
 from pathlib import Path
 from config.aoi_config import (
-    GEE_COLLECTIONS, DATA_WINDOW, get_aoi_geometry, DATA_DIR,
+    GEE_COLLECTIONS, GEE_PROJECT_ID, DATA_WINDOW, get_aoi_geometry, DATA_DIR,
 )
-
-GEE_PROJECT_ID = os.environ.get("GEE_PROJECT", "midyear-byway-508408-d6")
 
 
 def init_gee():

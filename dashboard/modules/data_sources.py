@@ -34,7 +34,7 @@ def render():
         ["SRTM DEM", "Shuttle Radar Topography", "30m", "USGS/SRTMGL1_003"],
         ["CHIRPS Rainfall", "Climate Hazards Group", "Daily, 5km", "UCSB-CHG/CHIRPS/DAILY"],
         ["JRC Global Surface Water", "Joint Research Centre", "Monthly occurrence", "JRC/GSW1_4/GlobalSurfaceWater"],
-        ["Sen1Floods11", "Hand-labeled benchmark", "446 chips, 10 countries", "Google Cloud Storage"],
+        ["Sen1Floods11", "Hand-labeled benchmark", "431 chips, 10 countries", "Google Cloud Storage"],
     ], columns=["Source", "Description", "Resolution", "Collection ID"])
 
     st.dataframe(sources, use_container_width=True, hide_index=True)
@@ -52,7 +52,7 @@ def render():
     st.markdown("""
     | Parameter | Value |
     |-----------|-------|
-    | **GEE Project ID** | `midyear-byway-508408-d6` |
+    | **GEE Project ID** | Set via `GEE_PROJECT` env var |
     | **Peak Flood Date** | August 21, 2018 |
     | **Analysis Dates** | Jul 16, Jul 28, Aug 9, Aug 21, Aug 27, Sep 2 |
     """)

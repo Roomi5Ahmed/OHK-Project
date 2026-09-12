@@ -2,24 +2,50 @@
 
 A dual-model flood risk prediction system for the Periyar River Basin (Aluva/Ernakulam), Kerala, India. Validated against the August 2018 Kerala floods using Sentinel-1 SAR imagery, CHIRPS rainfall data, and SRTM DEM. Combines a threshold-based MVP with a trained U-Net CNN for flood water detection.
 
+> **For judges/reviewers:** Key results are in `demo_output/` — the validation chart (`validation_flood_water.png`), peak flood risk map, and CNN output are committed so you can see the payoff without running the pipeline. The interactive dashboard is in `dashboard/` (`python -m streamlit run app.py`).
+
 ---
 
 ## Quick Start
 
+### View Results (no setup needed)
+
+Key outputs are pre-generated in `demo_output/`:
+- `validation_flood_water.png` — main validation chart
+- `risk_peak_aug21.tif` — peak flood risk map (GeoTIFF)
+- `cnn_peak_aug21.tif` — CNN water detection (GeoTIFF)
+- `high_risk_regions.csv` — flagged high-risk pixels
+
+### Run the Dashboard
+
 ```bash
-# 1. Install dependencies
+cd dashboard
+pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+### Full Pipeline (requires GEE auth + GPU)
+
+```bash
+# 1. Install PyTorch with CUDA
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# 2. Install remaining dependencies
 pip install -r requirements.txt
 
-# 2. Authenticate Google Earth Engine
+# 3. Authenticate Google Earth Engine
 earthengine authenticate
 
-# 3. Download Sen1Floods11 training data
+# 4. Set your GEE project ID
+set GEE_PROJECT=your-gee-project-id
+
+# 5. Download Sen1Floods11 training data
 python download_sen1floods11.py
 
-# 4. Train the CNN model (GPU recommended, ~3.5 min on RTX 3050)
+# 6. Train the CNN model (GPU recommended, ~3.5 min on RTX 3050)
 python train_flood_model.py --epochs 30
 
-# 5. Run the full pipeline
+# 7. Run the full pipeline
 python run_pipeline.py
 
 # Or run with cached data (no GEE needed)
@@ -98,7 +124,7 @@ OHK Project/
 │   ├── jrc_permanent_water.tif    # JRC Global Surface Water permanent water mask
 │   └── sen1floods11/              # Hand-labeled training data (431 S1 chips + labels)
 ├── models/
-│   ├── flood_unet_best.pt         # Best model checkpoint (val IoU = 0.5583)
+│   ├── flood_unet_best.pt         # Best model checkpoint (val IoU = 0.5395)
 │   ├── flood_unet_final.pt        # Final model after 30 epochs
 │   └── training_history.json      # Epoch-by-epoch metrics
 ├── output/
@@ -130,6 +156,11 @@ OHK Project/
 
 ```bash
 cd "C:\Git\OHK Project"
+
+# Install PyTorch with CUDA 12.1 support (required for GPU training)
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# Install remaining dependencies
 pip install -r requirements.txt
 ```
 
@@ -149,10 +180,10 @@ pip install -r requirements.txt
 earthengine authenticate
 ```
 
-This opens a browser for one-time OAuth authentication. Set your project ID in `config/aoi_config.py` or via environment variable:
+This opens a browser for one-time OAuth authentication. Set your project ID in `config/aoi_config.py` (the `GEE_PROJECT_ID` variable) or via environment variable:
 
 ```bash
-set GEE_PROJECT=midyear-byway-508408-d6
+set GEE_PROJECT=your-gee-project-id
 ```
 
 ### Step 3: Download Sen1Floods11 Training Data
@@ -161,7 +192,7 @@ set GEE_PROJECT=midyear-byway-508408-d6
 python download_sen1floods11.py
 ```
 
-Downloads ~431 hand-labeled Sentinel-1 chips and ground truth labels from Google Cloud Storage to `data/sen1floods11/`.
+Downloads ~431 hand-labeled Sentinel-1 chips and ground truth labels from Google Cloud Storage to `data/sen1floods11/`. (The published dataset lists 446 chips; 431 were successfully downloaded from GCS.)
 
 ### Step 4: Train the CNN Model
 
@@ -252,7 +283,7 @@ Permanent water bodies (JRC GSW) are subtracted to isolate flood-only water.
 ### 4. Risk Scoring — CNN U-Net
 
 - **Architecture**: U-Net with ResNet18 encoder (pretrained on ImageNet)
-- **Training data**: Sen1Floods11 (446 hand-labeled Sentinel-1 chips, 40 India chips oversampled 3x)
+- **Training data**: Sen1Floods11 (431 hand-labeled Sentinel-1 chips, 40 India chips oversampled 3x)
 - **Input**: 2-channel SAR (VH + VV, duplicated since Kerala has VH only)
 - **Output**: Per-pixel water probability [0, 1]
 - **Inference**: Sliding window (256×256, 64px overlap) with NaN handling
@@ -285,8 +316,8 @@ Flags pixels exceeding risk threshold (0.7) as high-risk, exports to CSV with la
 |------|-------------------|-------------|----------------|----------------|
 | Jul 16 | 4.59% | 28.99% | 227mm | Pre-monsoon 150mm rain event (Jul 15) |
 | Jul 28 | 2.28% | 19.73% | 42mm | **Baseline** (pre-flood) |
-| Aug 9 | 2.67% | 20.10% | 128mm | Early flood onset (+0.39% vs baseline) |
-| Aug 21 | 3.95% | 23.09% | 354mm | **Peak flood** (+73% vs baseline) |
+| Aug 9 | 2.67% | 20.10% | 128mm | Early flood onset (Threshold +17%, CNN +2%) |
+| Aug 21 | 3.95% | 23.09% | 354mm | **Peak flood** (Threshold +73%, CNN +17%) |
 | Aug 27 | 2.61% | 19.18% | 117mm | Flood receding (near baseline) |
 | Sep 2 | 2.67% | 21.33% | 106mm | Post-flood (near baseline) |
 
@@ -302,8 +333,8 @@ Flags pixels exceeding risk threshold (0.7) as high-risk, exports to CSV with la
 | Metric | Best Value | Epoch |
 |--------|-----------|-------|
 | Validation IoU | 0.5395 | 10 |
-| Validation Accuracy | 93.25% | 26 |
-| Training Loss | 0.1569 | 29 |
+| Validation Accuracy | 94.10% | 6 |
+| Training Loss | 0.1850 | 10 |
 | Final Validation Loss | 0.1403 | 30 |
 
 ---

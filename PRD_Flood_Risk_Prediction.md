@@ -70,7 +70,7 @@ Date windows to pull: bracket both **9 August 2018** and **21 August 2018** — 
   gsutil -m rsync -r gs://sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand ./data/S1
   gsutil -m rsync -r gs://sen1floods11/v1.1/data/flood_events/HandLabeled/LabelHand ./data/Labels
   ```
-- Chip naming is `EVENT_CHIPID_LAYER.tif` (e.g. `India_103757_S1Hand.tif`) — filter filenames for the `India` event prefix to prioritize the most geographically relevant chips, then fall back to the full 446-chip hand-labeled set for broader generalization.
+- Chip naming is `EVENT_CHIPID_LAYER.tif` (e.g. `India_103757_S1Hand.tif`) — filter filenames for the `India` event prefix to prioritize the most geographically relevant chips, then fall back to the full 431-chip hand-labeled set for broader generalization.
 - Metadata/event locations: `Sen1Floods11_Metadata.geojson` in the same repo.
 
 **Python environment (Day 1 hour 0, run once):**
@@ -107,7 +107,7 @@ earthengine authenticate   # opens browser, one-time auth
 - **This must function standalone without any trained model.**
 
 ### 5.4 Risk Scoring Module — ML Model (Day 2 primary track, not just a stretch goal)
-- Fine-tune a small U-Net (pretrained encoder, e.g. ResNet18/MobileNet via `segmentation_models.pytorch`) on **Sen1Floods11** (using its hand-labeled India chips as a strong prior, plus the full 446-chip hand-labeled set for generalization) to predict flood-water probability per pixel from SAR input.
+- Fine-tune a small U-Net (pretrained encoder, e.g. ResNet18/MobileNet via `segmentation_models.pytorch`) on **Sen1Floods11** (using its hand-labeled India chips as a strong prior, plus the full 431-chip hand-labeled set for generalization) to predict flood-water probability per pixel from SAR input.
 - With two days available, this is no longer purely a stretch goal — build and integrate it as the primary risk-scoring engine, with the MVP threshold model kept as the guaranteed fallback if training or integration hits a wall.
 - If successful, use the CNN's output water-probability map as a replacement/enhancement for the "water pixel flag" step in 5.3, keeping the rainfall+terrain fusion the same.
 - With extra time, consider validating the CNN's own output against the published ~94% accuracy benchmark from the Kerala 2018 GEE threshold study — a strong, judge-legible comparison point ("our model vs. published baseline").

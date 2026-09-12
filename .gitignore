@@ -12,3 +12,6 @@ dist/
 build/
 .venv/
 venv/
+
+# Keep demo_output/ for judges (key results visible without running pipeline)
+!demo_output/

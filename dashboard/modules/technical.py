@@ -52,7 +52,7 @@ def render_configuration():
     st.markdown("""
     | Parameter | Value |
     |-----------|-------|
-    | **GEE Project ID** | `midyear-byway-508408-d6` |
+    | **GEE Project ID** | Set via `GEE_PROJECT` env var |
     | **AOI Bounds** | 76.25–76.45°E, 9.95–10.15°N |
     | **Data Window** | 2018-07-15 to 2018-09-10 |
     | **Validation Dates** | 2018-08-09, 2018-08-21 |

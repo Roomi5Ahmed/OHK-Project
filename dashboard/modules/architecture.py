@@ -13,7 +13,7 @@ def render():
             "SRTM DEM (30m resolution, terrain slope)",
             "CHIRPS Rainfall (daily precipitation, 5km resolution)",
             "JRC Global Surface Water (permanent water mask)",
-            "Sen1Floods11 (hand-labeled benchmark, 446 chips)",
+            "Sen1Floods11 (hand-labeled benchmark, 431 chips)",
         ]),
         ("2. Preprocessing — Noise reduction & standardization", [
             "SAR: Auto-detect dB vs linear (GEE data is dB)",
