@@ -5,6 +5,7 @@ from streamlit_folium import st_folium
 import rasterio
 import numpy as np
 from pathlib import Path
+from datetime import datetime
 from utils.load_data import DATES, DATE_LABELS, DATA_DIR, OUTPUT_DIR
 
 def render():
@@ -97,6 +98,17 @@ def render():
 
     # Stats below map
     st.divider()
+
+    # Satellite pass lag disclosure
+    from datetime import timedelta
+    pass_dt = datetime.strptime(selected_date, "%Y-%m-%d")
+    next_pass_dt = pass_dt + timedelta(days=9)
+    st.caption(
+        f"📡 **Satellite pass:** {selected_date} · "
+        f"**Next Sentinel-1 pass expected:** ~{next_pass_dt.strftime('%Y-%m-%d')} (~9 days) · "
+        f"Conditions may have changed since this pass."
+    )
+
     st.subheader(f"Flood Extent — {selected_label}")
 
     from utils.load_data import get_flood_stats
