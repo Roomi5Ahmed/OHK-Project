@@ -2,17 +2,24 @@ import streamlit as st
 import folium
 from folium import plugins
 from streamlit_folium import st_folium
-import rasterio
 import numpy as np
 from pathlib import Path
 from datetime import datetime, timedelta
 import functools
 from utils.load_data import DATES, DATE_LABELS, DATA_DIR, OUTPUT_DIR
 
+try:
+    import rasterio
+    HAS_RASTERIO = True
+except ImportError:
+    HAS_RASTERIO = False
+
 
 @functools.lru_cache(maxsize=None)
 def _global_vrange(layer_choice):
     """Compute shared vmin/vmax across all 6 dates so severity is visually comparable."""
+    if not HAS_RASTERIO:
+        return 0.0, 1.0
     prefix = "risk_" if layer_choice == "Threshold Risk" else "cnn_water_"
     all_vals = []
     for d in DATES:
@@ -21,6 +28,8 @@ def _global_vrange(layer_choice):
             with rasterio.open(path) as src:
                 arr = src.read(1)
                 all_vals.append(arr[~np.isnan(arr)])
+    if not all_vals:
+        return 0.0, 1.0
     combined = np.concatenate(all_vals)
     return float(np.percentile(combined, 5)), float(np.percentile(combined, 95))
 
@@ -30,6 +39,12 @@ def render():
     st.caption("Explore flood risk across the Periyar Basin for each analysis date")
 
     st.divider()
+
+    if not HAS_RASTERIO:
+        st.warning("**Map requires rasterio** — not available in this deployment. "
+                   "Run the dashboard locally with `pip install rasterio` to view interactive maps.")
+        st.info("The flood risk data is pre-generated in `demo_output/` — see the Validation Summary page for charts.")
+        return
 
     col1, col2 = st.columns([3, 1])
 
@@ -48,7 +63,8 @@ def render():
         cnn_path = OUTPUT_DIR / "risk_maps" / f"cnn_water_{selected_date}.tif"
 
         if not risk_path.exists() and not cnn_path.exists():
-            st.error(f"Files not found")
+            st.warning(f"Risk map files not found — data not available in cloud deployment.")
+            st.info("Run `python process_cached.py` locally to generate risk maps.")
             return
 
         try:

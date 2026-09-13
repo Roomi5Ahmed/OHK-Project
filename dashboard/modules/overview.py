@@ -75,6 +75,8 @@ def render():
     baseline_c = df.loc[df["Date"] == "Jul 28", "CNN %"].values[0]
 
     def fmt_change(val, base):
+        if base == 0:
+            return "N/A"
         pct = (val / base - 1) * 100
         return f"+{pct:.0f}%" if pct > 0 else f"{pct:.0f}%"
 

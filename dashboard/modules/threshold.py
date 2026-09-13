@@ -102,6 +102,9 @@ flood_pct = water_mask.sum() / water_mask.size * 100
             c1.metric("Flood Water", f"{s['threshold']:.2f}%")
             c2.metric("7-day Rain", f"{s['rain7d']:.1f}mm")
             baseline = stats[1]['threshold']
-            change = (s['threshold'] / baseline - 1) * 100
-            c3.metric("vs Baseline", f"{change:+.1f}%")
+            if baseline > 0:
+                change = (s['threshold'] / baseline - 1) * 100
+                c3.metric("vs Baseline", f"{change:+.1f}%")
+            else:
+                c3.metric("vs Baseline", "N/A")
             st.caption(desc)

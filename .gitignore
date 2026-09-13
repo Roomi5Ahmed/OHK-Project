@@ -6,7 +6,6 @@ output/validation_charts/*.png
 output/alerts/*.csv
 output/pip_install.log
 output/gsutil_download.log
-output/daily_*.json
 demo_output/*.tif
 demo_output/*.csv
 __pycache__/
@@ -18,5 +17,9 @@ build/
 .venv/
 venv/
 
-# Keep demo_output/ images for judges
+# Keep lightweight JSON data for cloud deployment
+!output/daily_api_backtest.json
+!output/daily_rainfall_risk.json
+
+# Keep demo_output images for judges
 !demo_output/*.png
