@@ -69,7 +69,10 @@ def render():
                 baseline_path = OUTPUT_DIR / "risk_maps" / "cnn_water_2018-07-28.tif"
                 with rasterio.open(baseline_path) as src:
                     baseline_data = src.read(1)
-                data = data - baseline_data
+                # Handle shape mismatch by cropping to common dimensions
+                min_rows = min(data.shape[0], baseline_data.shape[0])
+                min_cols = min(data.shape[1], baseline_data.shape[1])
+                data = data[:min_rows, :min_cols] - baseline_data[:min_rows, :min_cols]
 
             from pyproj import Transformer
             transformer = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
