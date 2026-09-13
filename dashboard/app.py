@@ -21,6 +21,7 @@ PAGES = {
     "📊 Threshold Model": "threshold",
     "🧠 CNN Model": "cnn",
     "🗺️ Interactive Flood Map": "flood_map",
+    "⏱️ Early Warning / Lead Time": "lead_time",
     "✅ Validation Summary": "validation",
     "📋 Technical Details": "technical",
 }

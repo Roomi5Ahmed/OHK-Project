@@ -5,8 +5,25 @@ from streamlit_folium import st_folium
 import rasterio
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
+import functools
 from utils.load_data import DATES, DATE_LABELS, DATA_DIR, OUTPUT_DIR
+
+
+@functools.lru_cache(maxsize=None)
+def _global_vrange(layer_choice):
+    """Compute shared vmin/vmax across all 6 dates so severity is visually comparable."""
+    prefix = "risk_" if layer_choice == "Threshold Risk" else "cnn_water_"
+    all_vals = []
+    for d in DATES:
+        path = OUTPUT_DIR / "risk_maps" / f"{prefix}{d}.tif"
+        if path.exists():
+            with rasterio.open(path) as src:
+                arr = src.read(1)
+                all_vals.append(arr[~np.isnan(arr)])
+    combined = np.concatenate(all_vals)
+    return float(np.percentile(combined, 5)), float(np.percentile(combined, 95))
+
 
 def render():
     st.title("Interactive Flood Map")
@@ -30,18 +47,29 @@ def render():
         risk_path = OUTPUT_DIR / "risk_maps" / f"risk_{selected_date}.tif"
         cnn_path = OUTPUT_DIR / "risk_maps" / f"cnn_water_{selected_date}.tif"
 
-        tif_path = risk_path if layer_choice == "Threshold Risk" else cnn_path
-        label = "Threshold Risk Score" if layer_choice == "Threshold Risk" else "CNN Water Probability"
-
-        if not tif_path.exists():
-            st.error(f"File not found: {tif_path}")
+        if not risk_path.exists() and not cnn_path.exists():
+            st.error(f"Files not found")
             return
 
         try:
+            if layer_choice == "Threshold Risk":
+                tif_path = risk_path
+                label = "Threshold Risk Score"
+            else:
+                tif_path = cnn_path
+                label = "CNN Water Change vs Baseline"
+
             with rasterio.open(tif_path) as src:
                 data = src.read(1)
                 bounds = src.bounds
                 crs = src.crs
+
+            # CNN: show change relative to baseline (Jul 28)
+            if layer_choice == "CNN Water Detection":
+                baseline_path = OUTPUT_DIR / "risk_maps" / "cnn_water_2018-07-28.tif"
+                with rasterio.open(baseline_path) as src:
+                    baseline_data = src.read(1)
+                data = data - baseline_data
 
             from pyproj import Transformer
             transformer = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
@@ -58,20 +86,30 @@ def render():
                 st.warning("No valid data in raster")
                 return
 
-            vmin = float(np.percentile(valid_data, 5))
-            vmax = float(np.percentile(valid_data, 95))
+            # Global color scale for threshold; per-range for CNN diff
+            if layer_choice == "Threshold Risk":
+                vmin, vmax = _global_vrange("Threshold Risk")
+            else:
+                abs_max = max(abs(float(np.percentile(valid_data, 5))),
+                              abs(float(np.percentile(valid_data, 95))))
+                vmin, vmax = -abs_max, abs_max
 
             import matplotlib
             matplotlib.use('Agg')
             import matplotlib.pyplot as plt
+            import matplotlib.colors as mcolors
             import tempfile
             from PIL import Image
 
-            cmap_name = 'Blues' if layer_choice == "Threshold Risk" else 'Reds'
-            cmap = plt.get_cmap(cmap_name)
+            if layer_choice == "CNN Water Detection":
+                # Diverging colormap: blue = drier than baseline, white = normal, red = wetter
+                cmap = plt.get_cmap('RdBu_r')
+                norm = mcolors.TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
+            else:
+                cmap = plt.get_cmap('Blues')
+                norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
 
-            norm_data = np.clip((data - vmin) / (vmax - vmin + 1e-10), 0, 1)
-            rgba_data = cmap(norm_data)
+            rgba_data = cmap(norm(data))
             rgba_data[np.isnan(data)] = [0, 0, 0, 0]
             rgba_img = (rgba_data * 255).astype(np.uint8)
 
@@ -100,7 +138,6 @@ def render():
     st.divider()
 
     # Satellite pass lag disclosure
-    from datetime import timedelta
     pass_dt = datetime.strptime(selected_date, "%Y-%m-%d")
     next_pass_dt = pass_dt + timedelta(days=9)
     st.caption(
