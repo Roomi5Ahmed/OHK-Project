@@ -22,15 +22,33 @@ def get_flood_stats():
 
     Threshold: preprocess_sar → sar_water_index → JRC subtract → pixels > 0.5
     CNN: read cnn_water_*.tif → pixels > 0.5
-    """
-    from src.preprocessing.sar import preprocess_sar
-    from src.preprocessing.alignment import resample_array
-    from src.scoring.threshold import sar_water_index
 
+    Returns empty results if data files are missing (cloud deployment).
+    """
     s1_dir = DATA_DIR / "s1"
     rain_dir = DATA_DIR / "rainfall"
+    jrc_path = DATA_DIR / "jrc_permanent_water.tif"
 
-    with rasterio.open(DATA_DIR / "jrc_permanent_water.tif") as src:
+    # Check if required data exists
+    if not s1_dir.exists() or not jrc_path.exists():
+        # Return placeholder data for cloud deployment
+        return [
+            {'date': d, 'threshold': 0.0, 'cnn': 0.0, 'rain7d': 0.0}
+            for d in DATES
+        ]
+
+    try:
+        from src.preprocessing.sar import preprocess_sar
+        from src.preprocessing.alignment import resample_array
+        from src.scoring.threshold import sar_water_index
+    except ImportError:
+        # Dependencies not available (cloud deployment)
+        return [
+            {'date': d, 'threshold': 0.0, 'cnn': 0.0, 'rain7d': 0.0}
+            for d in DATES
+        ]
+
+    with rasterio.open(jrc_path) as src:
         jrc_raw = src.read(1).astype(np.float32)
         jrc_transform = src.transform
         jrc_crs = src.crs

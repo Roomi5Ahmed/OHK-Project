@@ -1,9 +1,14 @@
+# Data and model files (too large for GitHub)
 data/
+models/*.pt
 output/risk_maps/*.tif
 output/validation_charts/*.png
 output/alerts/*.csv
 output/pip_install.log
 output/gsutil_download.log
+output/daily_*.json
+demo_output/*.tif
+demo_output/*.csv
 __pycache__/
 *.pyc
 .env
@@ -13,5 +18,5 @@ build/
 .venv/
 venv/
 
-# Keep demo_output/ for judges (key results visible without running pipeline)
-!demo_output/
+# Keep demo_output/ images for judges
+!demo_output/*.png

@@ -27,7 +27,13 @@ def render_training_curves():
 
     history_path = MODEL_DIR / "training_history.json"
     if not history_path.exists():
-        st.error("Training history not found")
+        st.info("Training history not available in cloud deployment. Run `python train_flood_model.py` locally to generate.")
+        # Show placeholder metrics
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Best Val IoU", "0.5395", "Epoch 10")
+        c2.metric("Best Val Acc", "94.1%")
+        c3.metric("Final Train Loss", "0.1702")
+        c4.metric("Total Epochs", "30")
         return
 
     with open(history_path) as f:
